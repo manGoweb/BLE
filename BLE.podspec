@@ -8,12 +8,12 @@
 
 Pod::Spec.new do |s|
   s.name             = "BLE"
-  s.version          = "0.1.0"
+  s.version          = "0.1.1"
   s.summary          = "Simple BLE (Bluetooth Low Energy) wrapper library in Swift"
   s.description      = "Swift wrapper around CoreBluetooth. Library allows you to connect to BLE devices, read and write data to them"
 
   s.homepage         = "https://github.com/manGoweb/BLE"
-  # s.screenshots     = "www.example.com/screenshots_1", "www.example.com/screenshots_2"
+  s.screenshots     = "https://github.com/manGoweb/BLE/_orig/home.png"
   s.license          = 'MIT'
   s.author           = { "Ondrej Rafaj" => "rafaj@mangoweb.cz" }
   s.source           = { :git => "https://github.com/manGoweb/BLE.git", :tag => s.version.to_s }

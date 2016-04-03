@@ -32,6 +32,10 @@ var buffer: [UInt8] = [1, 0, 100]
 let data: NSData = NSData(bytes: buffer, length: 3)
 try! self.ble?.write(data, characteristicsUUID: "713D0003-503E-4C75-BA94-3148F18D941E")
 ```
+ 
+## Example application
+
+![Screenshot 1](https://github.com/manGoweb/BLE/_orig/home.png "Screenshot 1")
 
 ## Requirements
 
