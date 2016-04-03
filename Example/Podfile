@@ -1,0 +1,13 @@
+source 'https://github.com/CocoaPods/Specs.git'
+use_frameworks!
+
+target 'BLE_Example', :exclusive => true do
+  pod 'BLE', :path => '../'
+  pod 'SnapKit'
+end
+
+target 'BLE_Tests', :exclusive => true do
+  pod 'BLE', :path => '../'
+
+  
+end
