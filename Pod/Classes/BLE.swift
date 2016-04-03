@@ -19,9 +19,11 @@ public protocol BLEDelegate {
     func bleDidReceiveData(ble: BLE, peripheral: CBPeripheral, characteristic: String, data: NSData?)
 }
 
+
 public enum BLEError: ErrorType {
     case UUIDNotFoundInAvailableCharacteristics
 }
+
 
 public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
@@ -78,15 +80,14 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
     
+    private(set) public var peripherals: [CBPeripheral] = [CBPeripheral]()
+    
     private var usedCharacteristicsUUIDs: [CBUUID]? = nil
-    
     private var serviceCBUUIDs: [CBUUID]?
-    
     private var centralManager: CBCentralManager!
     private var activePeripheral: CBPeripheral?
     private var characteristics: [String : CBCharacteristic] = [String : CBCharacteristic]()
     private var data: NSMutableData?
-    private(set) var peripherals: [CBPeripheral] = [CBPeripheral]()
     private var rssiCompletionHandlers: [CBPeripheral: ((CBPeripheral, NSNumber?, NSError?) -> ())]?
     
     override public init() {
