@@ -35,7 +35,7 @@ try! self.ble?.write(data, characteristicsUUID: "713D0003-503E-4C75-BA94-3148F18
  
 ## Example application
 
-![Screenshot 1](https://github.com/manGoweb/BLE/_orig/home.png "Screenshot 1")
+![Screenshot 1](https://raw.githubusercontent.com/manGoweb/BLE/master/_orig/home.png "Screenshot 1")
 
 ## Requirements
 
