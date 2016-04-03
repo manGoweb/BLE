@@ -1,6 +1,6 @@
 # BLE
 
-[![CI Status](http://img.shields.io/travis/manGoweb/BLE.svg?style=flat)](https://travis-ci.org/manGoweb/BLE)
+<!--[![CI Status](http://img.shields.io/travis/manGoweb/BLE.svg?style=flat)](https://travis-ci.org/manGoweb/BLE)-->
 [![Version](https://img.shields.io/cocoapods/v/BLE.svg?style=flat)](http://cocoapods.org/pods/BLE)
 [![License](https://img.shields.io/cocoapods/l/BLE.svg?style=flat)](http://cocoapods.org/pods/BLE)
 [![Platform](https://img.shields.io/cocoapods/p/BLE.svg?style=flat)](http://cocoapods.org/pods/BLE)
