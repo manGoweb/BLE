@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.description      = "Swift wrapper around CoreBluetooth. Library allows you to connect to BLE devices, read and write data to them"
 
   s.homepage         = "https://github.com/manGoweb/BLE"
-  s.screenshots     = "https://github.com/manGoweb/BLE/_orig/home.png"
+  s.screenshots     = "https://raw.githubusercontent.com/manGoweb/BLE/master/_orig/home.png"
   s.license          = 'MIT'
   s.author           = { "Ondrej Rafaj" => "rafaj@mangoweb.cz" }
   s.source           = { :git => "https://github.com/manGoweb/BLE.git", :tag => s.version.to_s }
