@@ -313,6 +313,12 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         for characteristic in service.characteristics! {
             self.characteristics[characteristic.UUID.UUIDString] = characteristic
+            do {
+                try enableNotifications(true, characteristicsUUID: characteristic.UUID.UUIDString)
+            }
+            catch {
+                print("Error - \(characteristic.UUID.UUIDString) not found in available characteristics")
+            }
         }
     }
     
