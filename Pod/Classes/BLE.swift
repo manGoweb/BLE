@@ -181,7 +181,7 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             throw BLEError.UUIDNotFoundInAvailableCharacteristics
         }
         
-        self.activePeripheral?.writeValue(data, forCharacteristic: char, type: .WithResponse)
+        self.activePeripheral?.writeValue(data, forCharacteristic: char, type: writeType)
     }
     
     public func enableNotifications(enable: Bool, characteristicsUUID: String) throws {
