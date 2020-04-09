@@ -10,7 +10,7 @@ import CoreBluetooth
 
 
 public protocol BLEDelegate {
-    func bleDidUpdateState(ble: BLE, state: CBCentralManagerState)
+    func bleDidUpdateState(ble: BLE, state: CBManagerState)
     func bleDidDiscoverPeripherals(ble: BLE, peripherals: [CBPeripheral])
     func bleDidFinishScanning(ble: BLE)
     func bleDidConnectToPeripheral(ble: BLE, peripheral: CBPeripheral)
@@ -20,7 +20,7 @@ public protocol BLEDelegate {
 }
 
 
-public enum BLEError: ErrorType {
+public enum BLEError: Error {
     case UUIDNotFoundInAvailableCharacteristics
 }
 
@@ -35,7 +35,7 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         get {
             if (self.serviceCBUUIDs != nil && self.serviceCBUUIDs?.count == 1) {
                 let uuid: CBUUID = (self.serviceCBUUIDs?.first)! as CBUUID
-                return uuid.UUIDString
+                return uuid.uuidString
             }
             else {
                 return nil
@@ -58,7 +58,7 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
                 var uuidStrings: [String] = [String]()
                 var i: Int = 0
                 for uuid: CBUUID in self.usedCharacteristicsUUIDs! {
-                    uuidStrings[i] = uuid.UUIDString
+                    uuidStrings[i] = uuid.uuidString
                     i += 1
                 }
                 return uuidStrings
@@ -101,58 +101,58 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         self.debugPrint("Finished scanning")
         self.centralManager.stopScan()
         
-        self.delegate?.bleDidFinishScanning(self)
+        self.delegate?.bleDidFinishScanning(ble: self)
     }
     
     // MARK: Public methods
     
-    public func startScanning(timeout: NSTimeInterval, serviceUUIDs: [NSString]? = nil) -> Bool {
-        if self.centralManager.state != .PoweredOn {
+    public func startScanning(timeout: TimeInterval, serviceUUIDs: [NSString]? = nil) -> Bool {
+        if self.centralManager.state != .poweredOn {
             self.debugPrint("Unable to start scanning, device is powered off or not available")
-            self.delegate?.bleDidFinishScanning(self)
+            self.delegate?.bleDidFinishScanning(ble: self)
             return false
         }
         
         if (self.centralManager.isScanning) {
             self.debugPrint("Already scanning for peripherals")
-            self.delegate?.bleDidFinishScanning(self)
+            self.delegate?.bleDidFinishScanning(ble: self)
             return false
         }
         
         self.debugPrint("Scanning started")
         
-        NSTimer.scheduledTimerWithTimeInterval(timeout, target: self, selector: #selector(BLE.scanTimeout), userInfo: nil, repeats: false)
+        Timer.scheduledTimer(timeInterval: timeout, target: self, selector: #selector(BLE.scanTimeout), userInfo: nil, repeats: false)
         
         var services:[CBUUID] = []
         if (self.serviceUUID != nil) {
             services.append(CBUUID(string: self.serviceUUID!))
         }
-        if (serviceUUIDs != nil && serviceUUIDs?.count > 0) {
+        if let uuids = serviceUUIDs, uuids.count > 0 {
             for i in 0 ..< serviceUUIDs!.count {
                 let uuid: CBUUID = CBUUID(string: serviceUUIDs![i] as String)
                 services.append(uuid)
             }
         }
-        self.centralManager.scanForPeripheralsWithServices(services, options: nil)
+        self.centralManager.scanForPeripherals(withServices: services, options: nil)
         
         return true
     }
     
     public func connectToPeripheral(peripheral: CBPeripheral) -> Bool {
-        if (self.centralManager.state != .PoweredOn) {
+        if (self.centralManager.state != .poweredOn) {
             self.debugPrint("Couldn´t connect to peripheral")
             return false
         }
         
-        self.debugPrint("Connecting to \(peripheral.name!) - \(peripheral.identifier.UUIDString)")
+        self.debugPrint("Connecting to \(peripheral.name) - \(peripheral.identifier.uuidString)")
         
-        self.centralManager.connectPeripheral(peripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey : NSNumber(bool: true)])
+        self.centralManager.connect(peripheral, options: [CBConnectPeripheralOptionNotifyOnDisconnectionKey : NSNumber(value: true)])
         
         return true
     }
     
     public func disconnectFromPeripheral(peripheral: CBPeripheral) -> Bool {
-        if (self.centralManager.state != .PoweredOn) {
+        if (self.centralManager.state != .poweredOn) {
             self.debugPrint("BlueTooth is powered off or not available, can not disconnect peripheral")
             return false
         }
@@ -164,7 +164,7 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     public func disconnectActivePeripheral() {
         if (self.activePeripheral != nil) {
-            self.disconnectFromPeripheral(self.activePeripheral!)
+            _ = self.disconnectFromPeripheral(peripheral: self.activePeripheral!)
         }
     }
     
@@ -173,15 +173,15 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             throw BLEError.UUIDNotFoundInAvailableCharacteristics
         }
         
-        self.activePeripheral?.readValueForCharacteristic(char)
+        self.activePeripheral?.readValue(for: char)
     }
     
-    public func write(data: NSData, characteristicsUUID: String, writeType: CBCharacteristicWriteType = .WithoutResponse) throws {
+    public func write(data: NSData, characteristicsUUID: String, writeType: CBCharacteristicWriteType = .withoutResponse) throws {
         guard let char: CBCharacteristic = self.characteristics[characteristicsUUID] else {
             throw BLEError.UUIDNotFoundInAvailableCharacteristics
         }
         
-        self.activePeripheral?.writeValue(data, forCharacteristic: char, type: .WithResponse)
+        self.activePeripheral?.writeValue(data as Data, for: char, type: writeType)
     }
     
     public func enableNotifications(enable: Bool, characteristicsUUID: String) throws {
@@ -189,53 +189,52 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
             throw BLEError.UUIDNotFoundInAvailableCharacteristics
         }
         
-        self.activePeripheral?.setNotifyValue(enable, forCharacteristic: char)
+        self.activePeripheral?.setNotifyValue(enable, for: char)
     }
     
-    public func readRSSI(peripheral: CBPeripheral, completion: (peripheral: CBPeripheral, RSSI: NSNumber?, error: NSError?) -> ()) {
+    public func readRSSI(peripheral: CBPeripheral, completion: @escaping (CBPeripheral, NSNumber?, NSError?) -> ()) {
         self.rssiCompletionHandlers = [peripheral: completion]
         self.activePeripheral?.readRSSI()
     }
     
     // MARK: CBCentralManager delegate
     
-    public func centralManagerDidUpdateState(central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
-        case .Unknown:
+        case .unknown:
             self.debugPrint("Central manager state: Unknown")
             break
             
-        case .Resetting:
+        case .resetting:
             self.debugPrint("Central manager state: Resetting")
             break
             
-        case .Unsupported:
+        case .unsupported:
             self.debugPrint("Central manager state: Unsupported")
             break
             
-        case .Unauthorized:
+        case .unauthorized:
             self.debugPrint("Central manager state: Unauthorized")
             break
             
-        case .PoweredOff:
+        case .poweredOff:
             self.debugPrint("Central manager state: Powered off")
             break
             
-        case .PoweredOn:
+        case .poweredOn:
             self.debugPrint("Central manager state: Powered on")
             break
         }
         
-        self.delegate?.bleDidUpdateState(self, state: central.state)
+        self.delegate?.bleDidUpdateState(ble: self, state: central.state)
     }
-    
-    public func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
-        self.debugPrint("Found \(peripheral.name!): \(peripheral.identifier.UUIDString) RSSI: \(RSSI)")
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        self.debugPrint("Found \(peripheral.name): \(peripheral.identifier.uuidString) RSSI: \(RSSI)")
         
         for i in 0 ..< self.peripherals.count {
             let p = self.peripherals[i] as CBPeripheral
             
-            if (p.identifier.UUIDString == peripheral.identifier.UUIDString) {
+            if (p.identifier.uuidString == peripheral.identifier.uuidString) {
                 self.peripherals[i] = peripheral
                 
                 return
@@ -244,45 +243,45 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
         
         self.peripherals.append(peripheral)
         
-        self.delegate?.bleDidDiscoverPeripherals(self, peripherals: self.peripherals)
+        self.delegate?.bleDidDiscoverPeripherals(ble: self, peripherals: self.peripherals)
     }
     
-    public func centralManager(central: CBCentralManager, didFailToConnectPeripheral peripheral: CBPeripheral, error: NSError?) {
-        self.debugPrint("Could not connect to \(peripheral.name!) (\(peripheral.identifier.UUIDString)): \(error!.description)")
+    public func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
+        self.debugPrint("Could not connect to \(peripheral.name) (\(peripheral.identifier.uuidString)): \(error?.localizedDescription)")
         
-        self.delegate?.bleFailedConnectToPeripheral(self, peripheral: peripheral)
+        self.delegate?.bleFailedConnectToPeripheral(ble: self, peripheral: peripheral)
     }
     
     public func centralManager(central: CBCentralManager, didConnectPeripheral peripheral: CBPeripheral) {
-        self.debugPrint("Connected to \(peripheral.name!) \(peripheral.identifier.UUIDString)")
+        self.debugPrint("Connected to \(peripheral.name) \(peripheral.identifier.uuidString)")
         
         self.activePeripheral = peripheral
         
         self.activePeripheral?.delegate = self
         self.activePeripheral?.discoverServices(self.serviceCBUUIDs)
         
-        self.delegate?.bleDidConnectToPeripheral(self, peripheral: peripheral)
+        self.delegate?.bleDidConnectToPeripheral(ble: self, peripheral: peripheral)
     }
     
-    public func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
-        var text = "Disconnected from \(peripheral.name!) - \(peripheral.identifier.UUIDString)"
+    public func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
+        var text = "Disconnected from \(peripheral.name) - \(peripheral.identifier.uuidString)"
         
-        if (error != nil) {
-            text += ". Error: \(error!.description)"
+        if let e = error  {
+            text += ". Error: \(e.localizedDescription)"
         }
         
         self.debugPrint(text)
         
         self.activePeripheral?.delegate = nil
         self.activePeripheral = nil
-        self.characteristics.removeAll(keepCapacity: false)
+        self.characteristics.removeAll(keepingCapacity: false)
         
-        self.delegate?.bleDidDisconnectFromPeripheral(self, peripheral: peripheral)
+        self.delegate?.bleDidDisconnectFromPeripheral(ble: self, peripheral: peripheral)
     }
     
     // MARK: Debugging
     
-    private func debugPrint(message: String) {
+    private func debugPrint(_ message: String) {
         if (self.debugMode == true) {
             print(message)
         }
@@ -290,50 +289,50 @@ public class BLE: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     // MARK: CBPeripheral delegate
     
-    public func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
-        if (error != nil) {
-            self.debugPrint("Error discovering services for \(peripheral.name!): \(error!.description)")
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        if let e = error {
+            self.debugPrint("Error discovering services for \(peripheral.name): \(e.localizedDescription)")
             return
         }
         
-        self.debugPrint("Found services for \(peripheral.name!): \(peripheral.services!)")
+        self.debugPrint("Found services for \(peripheral.name): \(peripheral.services!)")
         
         for service: CBService in peripheral.services! {
-            peripheral.discoverCharacteristics(self.usedCharacteristicsUUIDs, forService: service)
+            peripheral.discoverCharacteristics(self.usedCharacteristicsUUIDs, for: service)
         }
     }
     
-    public func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
-        if (error != nil) {
-            self.debugPrint("Error discovering characteristics for \(peripheral.name!): \(error!.description)")
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        if let e = error {
+            self.debugPrint("Error discovering characteristics for \(peripheral.name): \(e.localizedDescription)")
             return
         }
         
-        self.debugPrint("Found characteristics for \(peripheral.name!): \(service.characteristics)")
+        self.debugPrint("Found characteristics for \(peripheral.name): \(service.characteristics)")
         
         for characteristic in service.characteristics! {
-            self.characteristics[characteristic.UUID.UUIDString] = characteristic
+            self.characteristics[characteristic.uuid.uuidString] = characteristic
             do {
-                try enableNotifications(true, characteristicsUUID: characteristic.UUID.UUIDString)
+                try enableNotifications(enable: true, characteristicsUUID: characteristic.uuid.uuidString)
             }
             catch {
-                print("Error - \(characteristic.UUID.UUIDString) not found in available characteristics")
+                print("Error - \(characteristic.uuid.uuidString) not found in available characteristics")
             }
         }
     }
     
-    public func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        if (error != nil) {
-            self.debugPrint("Error updating value on \(peripheral.name!): \(error!.description)")
+    public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        if let e = error {
+            self.debugPrint("Error updating value on \(peripheral.name): \(e.localizedDescription)")
             return
         }
         
-        self.delegate?.bleDidReceiveData(self, peripheral: peripheral, characteristic: characteristic.UUID.UUIDString, data: characteristic.value)
+        self.delegate?.bleDidReceiveData(ble: self, peripheral: peripheral, characteristic: characteristic.uuid.uuidString, data: characteristic.value as NSData?)
     }
-    
-    public func peripheral(peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: NSError?) {
+
+    public func peripheral(_ peripheral: CBPeripheral, didReadRSSI RSSI: NSNumber, error: Error?) {
         if (self.rssiCompletionHandlers![peripheral] != nil) {
-            self.rssiCompletionHandlers![peripheral]?(peripheral, RSSI, error)
+            self.rssiCompletionHandlers![peripheral]?(peripheral, RSSI, error as NSError?)
             self.rssiCompletionHandlers![peripheral] = nil
         }
     }
