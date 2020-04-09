@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "BLE"
-  s.version          = "0.1.1"
+  s.version          = "0.1.2"
   s.summary          = "Simple BLE (Bluetooth Low Energy) wrapper library in Swift"
   s.description      = "Swift wrapper around CoreBluetooth. Library allows you to connect to BLE devices, read and write data to them"
 
