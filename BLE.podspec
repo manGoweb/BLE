@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "BLE"
-  s.version          = "0.1.2"
+  s.version          = "0.1.3"
   s.summary          = "Simple BLE (Bluetooth Low Energy) wrapper library in Swift"
   s.description      = "Swift wrapper around CoreBluetooth. Library allows you to connect to BLE devices, read and write data to them"
 
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/manGoweb/BLE.git", :tag => s.version.to_s }
   s.social_media_url = 'https://twitter.com/rafiki270'
 
-  s.platform     = :ios, '9.0'
+  s.platform     = :ios, '10.0'
   s.requires_arc = true
 
   s.source_files = 'Pod/Classes/**/*'
